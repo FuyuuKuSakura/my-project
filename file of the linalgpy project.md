@@ -1,10 +1,56 @@
 # file of the linalgpy project
 
+## Introduction
+
 ## function
 
-### GetFunctionGroup
+### __init__
 
-To get the input of function group, then transform functions into dicts
+To build the main frame of ui
+
+### create_mode_selection
+
+To create a radiobuttton for options
+
+### create_input_area
+
+To creat a window for iputing function group/ matrix
+
+###  create_equation_inputs
+
+To catch what users input
+
+### on_mode_change
+
+To transfer information after using the radiobutton
+
+### create_button_area
+
+create button ares
+
+### create_result_area
+
+create result area
+
+### calculate
+
+To transfer informations about what to do
+
+### solve_equations
+
+To solve equations
+
+### analyze_matrix
+
+To analyze the matrics
+
+### clear
+
+To clear the label
+
+### show_help
+
+To help the idiots
 
 ### FindCoefficient
 
@@ -28,7 +74,7 @@ To illustrate Gaussian elimination by steps and ultimately lead to the identity 
 
 To confirm if the matrix is a row echelon form
 
-### RowEchelonForm
+### RowEchelonForm (have not implemented)
 
 To transform matrices into row echelon form
 
@@ -36,6 +82,8 @@ To transform matrices into row echelon form
 
 To confirm if the matrix is a row echelon form
 
-### ReducedRowEchelonForm
+### ReducedRowEchelonForm ((have not implemented))
 
 To transform matrices into redueced row echelon form
+
+### main

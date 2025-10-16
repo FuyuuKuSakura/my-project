@@ -52,7 +52,7 @@ class linalgpy:
         self.equation_inputs_frame = ttk.Frame(self.equation_frame)
         self.equation_inputs_frame.grid(row=1, column=0, columnspan=2, pady=5)
         
-        # 矩阵输入
+        # To input the matrix
         self.matrix_frame = ttk.Frame(self.input_frame)
         self.matrix_label = ttk.Label(self.matrix_frame, text="shape(row, column):")
         self.matrix_label.grid(row=0, column=0, padx=5)
