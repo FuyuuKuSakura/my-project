@@ -8,6 +8,7 @@ from PyQt5.QtCore import QUrl
 import random
 import openpyxl
 from openpyxl import Workbook, load_workbook
+import requests as r
 
 
 
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow):
         self.button2.setVisible(False)
 
         
-        self.button3 = QPushButton('ddl', self)
+        self.button3 = QPushButton('todo', self)
         self.button3.setGeometry(20, 170, 80, 50)
         self.button3.clicked.connect(self.open_todo_list_dialog)
         self.button3.setVisible(False)
@@ -126,6 +127,17 @@ class MainWindow(QMainWindow):
         button4 = QPushButton('·', self)
         button4.setGeometry(720, 800, 50, 50)
         button4.clicked.connect(self.display_applications)        
+
+        self.button5 = QPushButton('译', self)
+        self.button5.setGeometry(170, 110, 50, 100)
+        self.button5.clicked.connect(self.open_translate_dialog)
+        self.button5.setVisible(False)
+
+        self.button6 = QPushButton('常用页面', self)
+        self.button6.setGeometry(20, 290, 140, 50)
+        self.button6.clicked.connect(self.useful_pages_dialog)
+
+
         # 设置按钮样式
         button_style = """
         QPushButton {
@@ -159,6 +171,11 @@ class MainWindow(QMainWindow):
         self.button2.setStyleSheet(button_style)
         self.button3.setStyleSheet(button_style)
         button4.setStyleSheet(button4_style)
+        self.button5.setStyleSheet(button_style)
+
+    def useful_pages_dialog(self):
+        """打开常用页面对话框"""
+        
 
     def display_applications(self) :
         if self.button1.isVisible():
@@ -173,6 +190,10 @@ class MainWindow(QMainWindow):
             self.button3.setVisible(False)
         else:
             self.button3.setVisible(True)
+        if self.button5.isVisible():
+            self.button5.setVisible(False)
+        else:
+            self.button5.setVisible(True)
 
     def open_course_selection_dialog(self):
         """打开课程网站选择对话框"""
@@ -326,6 +347,49 @@ class MainWindow(QMainWindow):
 
         dialog.setLayout(layout)
         dialog.exec_()
+
+    def open_translate_dialog(self):
+        """打开翻译对话框"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("翻译")
+        dialog.setFixedSize(800, 600)  # 设置对话框大小
+        layout = QVBoxLayout()
+
+        # 创建文本输入框
+        input_text = QLineEdit(dialog)
+        input_text.setPlaceholderText("输入要翻译的文本")
+
+        # 创建按钮
+        translate_button = QPushButton('翻译', dialog)
+
+        # 创建用于显示结果的标签
+        result_label = QLabel("", dialog)
+        result_label.setAlignment(Qt.AlignCenter)
+
+        def perform_translation():
+            query = input_text.text()
+            if query:
+                translated_text = self.translate_api(query)
+                result_label.setText(translated_text)
+            else:
+                result_label.setText("请输入文本进行翻译")
+
+        translate_button.clicked.connect(perform_translation)
+
+        # 将控件添加到布局中
+        layout.addWidget(QLabel("要翻译的文本:"))
+        layout.addWidget(input_text)
+        layout.addWidget(translate_button)
+        layout.addWidget(result_label)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def translate_api(self, query, from_lang='AUTO', to_lang='AUTO'):
+        url = 'https://fanyi.baidu.com/sug'
+        data = {'kw': query} # 你只需要改kw对应的值
+        res = r.post(url, data=data).json()
+        return res['data'][0]['v']
 
     def createStatusBar(self):
         """创建状态栏"""
