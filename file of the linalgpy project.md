@@ -16,7 +16,7 @@ To create a radiobuttton for options
 
 To creat a window for iputing function group/ matrix
 
-###  create_equation_inputs
+### create_equation_inputs
 
 To catch what users input
 
