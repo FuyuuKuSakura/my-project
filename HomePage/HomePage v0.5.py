@@ -1,11 +1,15 @@
 import os
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit, QStatusBar
 from PyQt5.QtGui import QPalette, QBrush, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QTime, QDate
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtCore import QUrl
 import random
+import openpyxl
+from openpyxl import Workbook, load_workbook
+
+
 
 class MainWindow(QMainWindow):
     
@@ -57,17 +61,16 @@ class MainWindow(QMainWindow):
         """更新标签位置到右上角"""
         label_width = 150
         label_height = 30
-        margin = 5
-        
+        margin = 0
         self.date_label.setGeometry(
-            self.width() - label_width - margin, 
-            margin, 
+            565, 
+            margin , 
             label_width, 
             label_height
         )
         self.time_label.setGeometry(
-            self.width() - label_width - margin, 
-            margin + label_height + 10,  # 添加5px间距
+            570 + 130 + 5,  # 在日期标签右侧，添加10px间距
+            margin ,  # 添加10px间距
             label_width, 
             label_height
         )
@@ -100,19 +103,29 @@ class MainWindow(QMainWindow):
         # 设置背景图片
         self.setupBackground()
 
+
     def createButtons(self):
         """创建所有按钮"""
-        button1 = QPushButton('吃什么', self)
-        button1.setGeometry(20, 110, 100, 50)
-        button1.clicked.connect(self.open_random_dialog)
+        self.button1 = QPushButton('吃什么好', self)
+        self.button1.setGeometry(20, 110, 140, 50)
+        self.button1.clicked.connect(self.open_random_dialog)
+        self.button1.setVisible(False)
         
-        button2 = QPushButton('打开课程网站', self)
-        button2.setGeometry(20, 50, 200, 50)
-        button2.clicked.connect(self.open_course_selection_dialog)
+        self.button2 = QPushButton('打开课程网站', self)
+        self.button2.setGeometry(20, 50, 200, 50)
+        self.button2.clicked.connect(self.open_course_selection_dialog)
+        self.button2.setVisible(False)
+
         
-        button3 = QPushButton('ddl', self)
-        button3.setGeometry(20, 170, 80, 50)
-        
+        self.button3 = QPushButton('ddl', self)
+        self.button3.setGeometry(20, 170, 80, 50)
+        self.button3.clicked.connect(self.open_todo_list_dialog)
+        self.button3.setVisible(False)
+
+
+        button4 = QPushButton('·', self)
+        button4.setGeometry(720, 800, 50, 50)
+        button4.clicked.connect(self.display_applications)        
         # 设置按钮样式
         button_style = """
         QPushButton {
@@ -128,9 +141,38 @@ class MainWindow(QMainWindow):
         }
         """
         
-        button1.setStyleSheet(button_style)
-        button2.setStyleSheet(button_style)
-        button3.setStyleSheet(button_style)
+        button4_style = """
+        QPushButton {
+            background-color: rbga(255,255,255,0);
+            color: white;
+            font-size: 25px;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+        }
+        QPushButton:hover {
+            background-color: #f9d6db;
+        }
+        """
+        
+        self.button1.setStyleSheet(button_style)
+        self.button2.setStyleSheet(button_style)
+        self.button3.setStyleSheet(button_style)
+        button4.setStyleSheet(button4_style)
+
+    def display_applications(self) :
+        if self.button1.isVisible():
+            self.button1.setVisible(False)
+        else:
+            self.button1.setVisible(True)
+        if self.button2.isVisible():
+            self.button2.setVisible(False)
+        else:
+            self.button2.setVisible(True)
+        if self.button3.isVisible():
+            self.button3.setVisible(False)
+        else:
+            self.button3.setVisible(True)
 
     def open_course_selection_dialog(self):
         """打开课程网站选择对话框"""
@@ -204,6 +246,7 @@ class MainWindow(QMainWindow):
         result_label = QLabel("", dialog)
         result_label.setAlignment(Qt.AlignCenter)
 
+
         def generate_random():
             max_val_text = input_box.text()
             try:
@@ -226,18 +269,84 @@ class MainWindow(QMainWindow):
 
         dialog.setLayout(layout)
         dialog.exec_()
+    
+    def open_todo_list_dialog(self):
+        """打开待办事项对话框"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("待办事项")
+        dialog.setFixedSize(300, 300)  # 设置对话框大小
+        layout = QVBoxLayout()
+        # 创建文本输入框
+        input_event = QLineEdit(dialog)
+        input_event.setPlaceholderText("输入事件")
+        
+        input_date = QLineEdit(dialog)
+        input_date.setPlaceholderText("输入日期 (YYYY-MM-DD)")
+
+        add_button = QPushButton("添加待办", dialog)
+        
+        # Excel文件操作
+        excel_file = 'to_do_list.xlsx'
+
+        def init_excel():
+            if not os.path.exists(excel_file):
+                workbook = Workbook()
+                sheet = workbook.active
+                sheet.title = "Tasks"
+                sheet.append(["Event", "Date"])  # 添加表头
+                workbook.save(excel_file)
+
+        def add_task():
+            event = input_event.text()
+            date = input_date.text()
+            if event and date:
+                try:
+                    workbook = load_workbook(excel_file)
+                    sheet = workbook.active
+                    sheet.append([event, date])
+                    workbook.save(excel_file)
+                    
+                    input_event.clear()
+                    input_date.clear()
+                    self.statusBar().showMessage("待办事项已添加", 2000) # 显示2秒
+                except Exception as e:
+                    self.statusBar().showMessage(f"文件错误: {e}", 2000)
+            else:
+                self.statusBar().showMessage("事件和日期不能为空", 2000)
+
+        init_excel() # 确保Excel文件和表已创建
+        add_button.clicked.connect(add_task)
+
+        # 布局
+        layout.addWidget(QLabel("事件:"))
+        layout.addWidget(input_event)
+        layout.addWidget(QLabel("日期:"))
+        layout.addWidget(input_date)
+        layout.addWidget(add_button)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
 
     def createStatusBar(self):
         """创建状态栏"""
-        self.statusBar().showMessage('贴贴成功')
-        self.status_label = QLabel('贴贴成功')
-        self.status_label.setAlignment(Qt.AlignCenter)
-        self.statusBar().addWidget(self.status_label, 1)
+        status_bar = QStatusBar()
+        self.setStatusBar(status_bar)
+        status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: rbga(249,214,219,30);
+                color: white;
+                qproperty-alignment: AlignCenter;
+            }
+            QStatusBar::item {
+                border: none;
+            }
+        """)
+        status_bar.showMessage("贴贴成功！", 5000)
+
 
     def setupBackground(self):
         """设置背景图片"""
         self.setWindowOpacity(0.8)
-        
         # 搜索图片文件
         self.image_path = ""
         for root, dirs, files in os.walk(os.path.expanduser("~")):
@@ -262,4 +371,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MainWindow()
     ex.show()
+    ex.showFullScreen()
     sys.exit(app.exec_())
