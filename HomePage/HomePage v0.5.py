@@ -1,7 +1,7 @@
 import os
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit, QStatusBar
-from PyQt5.QtGui import QPalette, QBrush, QPixmap
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit, QStatusBar, QTextEdit, QComboBox, QShortcut
+from PyQt5.QtGui import QPalette, QBrush, QPixmap, QKeySequence
 from PyQt5.QtCore import Qt, QTimer, QTime, QDate
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtCore import QUrl
@@ -97,6 +97,9 @@ class MainWindow(QMainWindow):
 
         # 添加按钮
         self.createButtons()
+
+        # 添加文本框
+        self.createTextBox()
         
         # 创建状态栏
         self.createStatusBar()
@@ -104,22 +107,63 @@ class MainWindow(QMainWindow):
         # 设置背景图片
         self.setupBackground()
 
+        # 创建选项框
+        self.createComboBox()
 
+        self.shortcut_open_app = QShortcut(QKeySequence("Ctrl+A"), self)
+        self.shortcut_open_app.activated.connect(self.display_applications)
+
+
+    def createComboBox(self):
+        self.combo_box = QComboBox(self)
+        self.combo_box.setGeometry(1200, 230, 200, 20)
+        self.combo_box.addItems(['灵感', '收藏', '瞎记'])
+        combo_box_style = """
+        QComboBox {
+            background-color: rgba(204, 173, 155, 0.6);
+            color: black;
+            font-size: 14px;
+            border-radius: 10px;        }        
+        """
+        
+        self.combo_box.setStyleSheet(combo_box_style)
+        self.combo_box.setVisible(False)
+
+
+    def createTextBox(self):
+        self.text_edit = QTextEdit(self)
+        self.text_edit.setGeometry(1200, 50, 200, 170)
+
+        text_edit_style = """
+        QTextEdit {
+            background-color: rgba(204, 173, 155, 0.6);
+            color: black;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+        }        
+        """
+
+        self.text_edit.setStyleSheet(text_edit_style)
+        self.text_edit.setVisible(False)
+
+    
     def createButtons(self):
         """创建所有按钮"""
         self.button1 = QPushButton('吃什么好', self)
-        self.button1.setGeometry(20, 110, 140, 50)
+        self.button1.setGeometry(20, 110, 150, 50)
         self.button1.clicked.connect(self.open_random_dialog)
         self.button1.setVisible(False)
         
-        self.button2 = QPushButton('打开课程网站', self)
-        self.button2.setGeometry(20, 50, 200, 50)
+        self.button2 = QPushButton('课程网站', self)
+        self.button2.setGeometry(20, 50, 105, 50)
         self.button2.clicked.connect(self.open_course_selection_dialog)
         self.button2.setVisible(False)
 
         
         self.button3 = QPushButton('todo', self)
-        self.button3.setGeometry(20, 170, 80, 50)
+        self.button3.setGeometry(20, 170, 90, 50)
         self.button3.clicked.connect(self.open_todo_list_dialog)
         self.button3.setVisible(False)
 
@@ -128,14 +172,24 @@ class MainWindow(QMainWindow):
         button4.setGeometry(720, 800, 50, 50)
         button4.clicked.connect(self.display_applications)        
 
-        self.button5 = QPushButton('译', self)
-        self.button5.setGeometry(170, 110, 50, 100)
+        self.button5 = QPushButton('翻\n译', self)
+        self.button5.setGeometry(180, 110, 60, 110)
         self.button5.clicked.connect(self.open_translate_dialog)
         self.button5.setVisible(False)
 
         self.button6 = QPushButton('常用页面', self)
-        self.button6.setGeometry(20, 290, 140, 50)
-        self.button6.clicked.connect(self.useful_pages_dialog)
+        self.button6.setGeometry(135, 50, 105, 50)
+        self.button6.setVisible(False)
+        # self.button6.clicked.connect(self.useful_pages_dialog)
+
+        self.button7 = QPushButton('D', self)
+        self.button7.setGeometry(120, 170, 50, 50)
+        self.button7.setVisible(False)
+
+        self.button8 = QPushButton('提交', self)
+        self.button8.setGeometry(1200, 260, 200, 50)
+        self.button8.setVisible(False)
+
 
 
         # 设置按钮样式
@@ -145,8 +199,9 @@ class MainWindow(QMainWindow):
             color: black;
             font-size: 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 25px;
             padding: 10px 20px;
+
         }
         QPushButton:hover {
             background-color: #e8a3ae;
@@ -166,12 +221,47 @@ class MainWindow(QMainWindow):
             background-color: #f9d6db;
         }
         """
+
+        button7_style = """
+        QPushButton {
+            background-color: #f9d6db;
+            color: black;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+
+        }
+        QPushButton:hover {
+            background-color: #e8a3ae;
+        }
+        """
+
+        button8_style = """
+        QPushButton {
+            background-color: rgba(204, 173, 155, 0.6);
+            color: black;
+            font-size: 16px;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+
+        }
+        QPushButton:hover {
+            background-color: rgba(184, 138, 134, 0.6);
+        }
+        """
+
         
         self.button1.setStyleSheet(button_style)
         self.button2.setStyleSheet(button_style)
         self.button3.setStyleSheet(button_style)
         button4.setStyleSheet(button4_style)
         self.button5.setStyleSheet(button_style)
+        self.button6.setStyleSheet(button_style)
+        self.button7.setStyleSheet(button7_style)
+        self.button8.setStyleSheet(button8_style)
+
 
     def useful_pages_dialog(self):
         """打开常用页面对话框"""
@@ -194,6 +284,26 @@ class MainWindow(QMainWindow):
             self.button5.setVisible(False)
         else:
             self.button5.setVisible(True)
+        if self.button6.isVisible():
+            self.button6.setVisible(False)
+        else:
+            self.button6.setVisible(True)
+        if self.button7.isVisible():
+            self.button7.setVisible(False)
+        else:
+            self.button7.setVisible(True)
+        if self.button8.isVisible():
+            self.button8.setVisible(False)
+        else:
+            self.button8.setVisible(True)
+        if self.combo_box.isVisible():
+            self.combo_box.setVisible(False)
+        else:
+            self.combo_box.setVisible(True)
+        if self.text_edit.isVisible():
+            self.text_edit.setVisible(False)
+        else:
+            self.text_edit.setVisible(True)
 
     def open_course_selection_dialog(self):
         """打开课程网站选择对话框"""
