@@ -1,31 +1,15 @@
 # A PERSONAL HOMEPAGE BASED ON PYQT5
 
-> ver0.5
+## ver0.5
 
-## Interface
+ver0.5 has been abandoned as pyqt5 is a not very new
 
-- opening
+## ver0.6
 
-+-----------------------------------+
-|               TIME                |
-|                                   |
-|                                   |
-|             WALLPAPER             |
-|                                   |
-|                                   |
-|          DISPLAY BUTTON           |
-+-----------------------------------+
-|            STATUS BAR             |  
+This ver will be updated by pyside6
 
-- application
+### NEW FUNCTION
 
-+-----------------------------------+
-|               TIME                |
-|                                   |
-|                                   |
-|             WALLPAPER             |
-|                                   |
-|                                   |
-|                   |
-+-----------------------------------+
-|            STATUS BAR             |  
+1. Allow users to modify the background image
+2. Allow users to edit the background image
+3. Allow users to open a excel file (on the rhs)

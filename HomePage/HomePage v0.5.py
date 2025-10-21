@@ -1,10 +1,8 @@
 import os
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit, QStatusBar, QTextEdit, QComboBox, QShortcut
-from PyQt5.QtGui import QPalette, QBrush, QPixmap, QKeySequence
-from PyQt5.QtCore import Qt, QTimer, QTime, QDate
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtCore import QUrl
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QDialog, QVBoxLayout, QInputDialog, QLineEdit, QStatusBar, QTextEdit, QComboBox, QSizePolicy
+from PySide6.QtGui import QPalette, QBrush, QPixmap, QKeySequence, QDesktopServices, QAction, QShortcut
+from PySide6.QtCore import Qt, QTimer, QTime, QDate, QUrl
 import random
 import openpyxl
 from openpyxl import Workbook, load_workbook
@@ -13,7 +11,6 @@ import requests as r
 
 
 class MainWindow(QMainWindow):
-    
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -59,7 +56,7 @@ class MainWindow(QMainWindow):
         self.updateLabelPositions()
 
     def updateLabelPositions(self):
-        """更新标签位置到右上角"""
+        """更新标签位置到正上方"""
         label_width = 150
         label_height = 30
         margin = 0
@@ -113,7 +110,6 @@ class MainWindow(QMainWindow):
         self.shortcut_open_app = QShortcut(QKeySequence("Ctrl+A"), self)
         self.shortcut_open_app.activated.connect(self.display_applications)
 
-
     def createComboBox(self):
         self.combo_box = QComboBox(self)
         self.combo_box.setGeometry(1200, 230, 200, 20)
@@ -128,7 +124,6 @@ class MainWindow(QMainWindow):
         
         self.combo_box.setStyleSheet(combo_box_style)
         self.combo_box.setVisible(False)
-
 
     def createTextBox(self):
         self.text_edit = QTextEdit(self)
@@ -147,8 +142,7 @@ class MainWindow(QMainWindow):
 
         self.text_edit.setStyleSheet(text_edit_style)
         self.text_edit.setVisible(False)
-
-    
+  
     def createButtons(self):
         """创建所有按钮"""
         self.button1 = QPushButton('吃什么好', self)
@@ -170,6 +164,7 @@ class MainWindow(QMainWindow):
 
         button4 = QPushButton('·', self)
         button4.setGeometry(720, 800, 50, 50)
+        button4.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         button4.clicked.connect(self.display_applications)        
 
         self.button5 = QPushButton('翻\n译', self)
@@ -195,16 +190,18 @@ class MainWindow(QMainWindow):
         # 设置按钮样式
         button_style = """
         QPushButton {
-            background-color: #f9d6db;
-            color: black;
-            font-size: 16px;
-            border: none;
-            border-radius: 25px;
+            background: rgba(255, 240, 245, 0.7);
+            border: 1.5px solid rgba(255, 182, 193, 0.4);
+            border-radius: 10px;
             padding: 10px 20px;
-
+            color: #c2185b;
+            font-weight: bold;
+            font-size: 14px;
         }
         QPushButton:hover {
-            background-color: #e8a3ae;
+            background: rgba(255, 228, 235, 0.95);
+            border: 1.5px solid rgba(255, 105, 180, 0.7);
+            color: #ad1457;
         }
         """
         
@@ -262,11 +259,9 @@ class MainWindow(QMainWindow):
         self.button7.setStyleSheet(button7_style)
         self.button8.setStyleSheet(button8_style)
 
-
     def useful_pages_dialog(self):
         """打开常用页面对话框"""
         
-
     def display_applications(self) :
         if self.button1.isVisible():
             self.button1.setVisible(False)
@@ -343,7 +338,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(btn)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        dialog.exec()
     
     def open_random_dialog(self):
         """打开随机数对话框"""
@@ -399,7 +394,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(result_label)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        dialog.exec()
     
     def open_todo_list_dialog(self):
         """打开待办事项对话框"""
@@ -456,7 +451,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(add_button)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        dialog.exec()
 
     def open_translate_dialog(self):
         """打开翻译对话框"""
@@ -493,7 +488,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(result_label)
 
         dialog.setLayout(layout)
-        dialog.exec_()
+        dialog.exec()
 
     def translate_api(self, query, from_lang='AUTO', to_lang='AUTO'):
         url = 'https://fanyi.baidu.com/sug'
@@ -516,7 +511,6 @@ class MainWindow(QMainWindow):
             }
         """)
         status_bar.showMessage("贴贴成功！", 5000)
-
 
     def setupBackground(self):
         """设置背景图片"""
@@ -546,4 +540,4 @@ if __name__ == '__main__':
     ex = MainWindow()
     ex.show()
     ex.showFullScreen()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

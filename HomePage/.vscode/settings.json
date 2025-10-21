@@ -1,0 +1,43 @@
+{
+    "background.editor": {
+
+
+
+
+
+
+
+
+
+
+
+        "useFront": true,
+        "style": {
+            "background-position": "120% 120%",
+
+            "background-size": "auto",
+            "size":"cover",
+            "position":"center",
+            "opacity": 0.3
+        },
+        "styles": [
+            {},
+            {},
+            {}
+        ],
+        "images": [""],
+        "interval": 0,
+        "random": false
+    },
+    "background.fullscreen": {
+
+
+
+        "images": ["file:///Users/fuyuuku/Downloads/姛的说/617AA301EF9B56F5937DBD0EA127E02F.jpg"],
+        "opacity": 0.3,
+        "size": "cover",
+        "position": "center",
+        "interval": 0,
+        "random": false
+    }
+}
