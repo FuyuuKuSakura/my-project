@@ -3,9 +3,9 @@ import sys
 import pandas as pd
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                                QHBoxLayout, QPushButton, QFileDialog, QTableWidget, 
-                               QTableWidgetItem, QLabel, QSplitter, QFrame, QMessageBox, QGridLayout, QLineEdit, QStackedWidget)
+                               QTableWidgetItem, QLabel, QSplitter, QFrame, QMessageBox, QGridLayout, QLineEdit, QStackedWidget, QDialog, QComboBox)
 from PySide6.QtCore import  Qt, QTimer, QTime, QDate, QUrl, QSize
-from PySide6.QtGui import QFont, QColor, QPalette, QBrush, QPixmap, QKeySequence, QDesktopServices, QAction, QShortcut, QIcon
+from PySide6.QtGui import QFont, QColor, QPalette, QBrush, QPixmap, QKeySequence, QDesktopServices, QAction, QShortcut, QIcon, QPainter, QPen
 
 class SidebarButton(QPushButton):
     def __init__(self, text):
@@ -114,7 +114,6 @@ class MikiLabel(QLabel):
                 padding: 10px;
                 font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
                 font-size: 13px;
-                box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
             }
         """)
         
@@ -177,6 +176,26 @@ class MikiLabel(QLabel):
         self.setFixedWidth(self.fixed_width)
         self.adjustHeight()
 
+class todo_button(QPushButton):
+    def __init__(self, text = '', color_code = 0 , parent = None):
+        super().__init__(text, color_code, parent)
+        self.setFixedStyle()
+    
+    def setFixedStyle(self, color_code):
+        colorlist = [ "yellow", "green", "blue", "white"]
+        color = colorlist[color_code % 4]
+        self.setStyleSheet("""
+            todo_button {
+                background-color: rgba(255, 240, 245, 0.9);
+                color: black;
+                border: 4px solid rgba(244, 229, 134, 1);
+                border-radius: 20px;
+                padding: 10px;
+                font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+                font-size: 13px;
+            }
+        """)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -185,7 +204,8 @@ class MainWindow(QMainWindow):
         self.app_buttons = []  # 存储所有应用按钮的引用
         self.current_page = "apps"  # 当前显示的页面
         self.setup_ui()
-
+        self.todo_list = []
+        self.todo_list_button = []
     
     def setup_ui(self):
         self.setWindowTitle("Home Page v0.6")
@@ -428,7 +448,7 @@ class MainWindow(QMainWindow):
         generate_button = QPushButton("生成随机数なの")
         generate_button.setStyleSheet("""
             QPushButton {
-                background: rgba(255, 200, 220, 0.3);
+                background: rgba(255, 200, 220, 0.6);
                 color: rgba(30, 50, 80, 1);
                 font-weight: bold;
                 border: 2px solid rgba(214, 75, 124, 0.3);
@@ -480,12 +500,248 @@ class MainWindow(QMainWindow):
         """)
         
         todo_layout = QVBoxLayout(todo_container)
-        todo_label = QLabel("待办事项页面 - 开发中")
-        todo_label.setFont(QFont("Arial", 24))
-        todo_label.setAlignment(Qt.AlignCenter)
-        todo_layout.addWidget(todo_label)
+        todo_button = QPushButton("    + 添加待办事项    ")
+        todo_button.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 200, 220, 0.6);
+                color: rgba(30, 50, 80, 1);
+                font-weight: bold;
+                border: 2px solid rgba(214, 75, 124, 0.3);
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 180, 210, 0.5);
+                border: 2px solid rgba(214, 75, 124, 0.5);
+            }
+            QPushButton:pressed {
+                background: rgba(255, 160, 200, 0.5);
+            }
+        """)
+        todo_button.setFont(QFont("PingFang SC Medium", 24))
+        todo_layout.addWidget(todo_button, alignment=Qt.AlignBottom | Qt.AlignHCenter)
+        todo_button.clicked.connect(self.open_dialog_todo)
+        self.todo_list = {
+
+        }
+        
+        # 创建交叉线覆盖层
+        crosshair_overlay = QFrame(todo_container)
+        crosshair_overlay.setStyleSheet("background: transparent; border: none;")
+        crosshair_overlay.setAttribute(Qt.WA_TransparentForMouseEvents)  # 鼠标事件穿透
+        crosshair_overlay.lower()  # 置于底层
+        
+        # 重写paintEvent来绘制交叉线
+        def paint_event(event):
+            painter = QPainter(crosshair_overlay)
+            painter.setRenderHint(QPainter.Antialiasing)
+            
+            # 设置线条样式
+            pen = QPen(QColor(214, 75, 124, 90))
+            pen.setWidth(6)
+            painter.setPen(pen)
+            
+            width = crosshair_overlay.width()
+            height = crosshair_overlay.height()
+            
+            # 绘制水平中线
+            center_y = height // 2
+            painter.drawLine(0, center_y, width, center_y)
+            
+            # 绘制垂直中线
+            center_x = width // 2
+            painter.drawLine(center_x, 0, center_x, height)
+            
+            painter.end()
+        
+        crosshair_overlay.paintEvent = paint_event
+        
+        # 确保覆盖层随容器大小变化
+        def resize_event(event):
+            crosshair_overlay.setGeometry(0, 0, todo_container.width(), todo_container.height())
+            crosshair_overlay.update()  # 触发重绘
+        
+        todo_container.resizeEvent = resize_event
         
         return todo_container
+    def open_dialog_todo(self):
+        """打开添加待办事项对话框"""
+        todo_dialog = QDialog(self)
+        todo_dialog.setWindowTitle("添加待办事项")
+        todo_dialog.setFixedSize(390, 480)
+        # todo_dialog_layout = QVBoxLayout(self.todo_page)
+        todo_dialog.setStyleSheet("""
+            QDialog {
+                background: rgba(255, 240, 245, 0.6);
+                color: rgba(30, 50, 80, 1);
+                font-weight: bold;
+                border: 10px solid rgba(214, 75, 124, 0.3);
+                border-radius: 10px;
+                padding: 10px;
+            }
+        """)
+        todo_dialog.setWindowOpacity(0.7)
+        todo_dialog_layout = QVBoxLayout(todo_dialog)
+        todo_dialog_layout.setContentsMargins(20, 20, 20, 20)
+        self.todo_content_input = QLineEdit("请输入待办内容なの")
+        self.todo_content_input.setStyleSheet("""
+            QLineEdit {
+                background: rgba(255, 240, 245, 0.3);
+                color: rgba(30, 50, 80, 1);
+                font-weight: bold;
+                border: 2px solid rgba(214, 75, 124, 0.4);
+                border-radius: 10px;
+                padding: 8px;
+            }
+            QLineEdit:focus {
+                border: 2px solid rgba(214, 75, 124, 0.3);
+            }
+        """)
+        self.todo_content_input.setFont(QFont("PingFang SC Medium", 32))
+        self.todo_content_input.setAlignment(Qt.AlignCenter)
+        todo_dialog_layout.addWidget(self.todo_content_input, alignment=Qt.AlignCenter)
+        self.todo_date_input = QLineEdit("YYYY-MM-DD HH:MM")
+        self.todo_date_input.setStyleSheet("""
+            QLineEdit {
+                background: rgba(255, 240, 245, 0.3);
+                color: rgba(30, 50, 80, 1);
+                font-weight: bold;
+                border: 2px solid rgba(214, 75, 124, 0.4);
+                border-radius: 10px;
+                padding: 8px;
+            }
+            QLineEdit:focus {
+                border: 2px solid rgba(214, 75, 124, 0.3);
+            }
+        """)
+        self.todo_date_input.setFont(QFont("PingFang SC Medium", 32))
+        self.todo_date_input.setAlignment(Qt.AlignCenter)
+        todo_dialog_layout.addWidget(self.todo_date_input, alignment=Qt.AlignCenter)
+        self.todo_mode_o = QComboBox(self)
+        self.todo_mode_o.addItems(['  紧急  ', '  还好  ','  宽松  ', '  不紧急  '])
+        self.todo_mode_t = QComboBox(self)
+        self.todo_mode_t.addItems(['  很重要  ','  重要  ','  次要  ','  无聊  '])
+        combo_box_style = """
+        QComboBox {
+            background-color: rgba(255, 200, 220, 0.6);
+            color: rgba(30, 50, 80, 1);
+            font-size: 14px;
+            border-radius: 10px;        
+        }
+        QComboBox QAbstractItemView {
+            background-color: white;
+            selection-background-color: white;
+            }        
+        """
+        self.todo_mode_o.setStyleSheet(combo_box_style)
+        self.todo_mode_o.setFixedWidth(100)
+        self.todo_mode_t.setStyleSheet(combo_box_style)
+        self.todo_mode_t.setFixedWidth(100)
+        todo_dialog_layout.addWidget(self.todo_mode_o, alignment=Qt.AlignCenter)
+        todo_dialog_layout.addWidget(self.todo_mode_t, alignment=Qt.AlignCenter)
+        add_todo_button = QPushButton("添加待办事项なの")
+        add_todo_button.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 200, 220, 0.6);
+                color: rgba(30, 50, 80, 1);
+                font-weight: bold;
+                border: 2px solid rgba(214, 75, 124, 0.3);
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background: rgba(255, 180, 210, 0.5);
+                border: 2px solid rgba(214, 75, 124, 0.5);
+            }
+            QPushButton:pressed {
+                background: rgba(255, 160, 200, 0.5);
+            }
+        """)
+        add_todo_button.setFont(QFont("PingFang SC Medium", 24))
+        todo_dialog_layout.addWidget(add_todo_button, alignment=Qt.AlignCenter)
+        add_todo_button.clicked.connect(self.written_todo)
+
+        todo_dialog_layout.addSpacing(20)
+        todo_dialog.exec()
+    
+    def written_todo(self) :
+        misson = self.todo_content_input.text().strip()
+        deadline = self.todo_date_input.text().strip()
+        mode_o = self.todo_mode_o.currentText().strip()
+        mode_t = self.todo_mode_t.currentText().strip()
+        todo_item ={
+            "任务" : misson ,
+            "截止日期" : deadline , 
+            "要紧程度" : mode_o ,
+            "重要程度" : mode_t
+        }
+        self.todo_list.append(todo_item)
+        self.create_todo_symbol()
+
+    def create_todo_symbol(self):
+        # 清除之前的待办按钮
+        for button in self.todo_list_button:
+            button.deleteLater()
+        self.todo_list_button.clear()
+        
+        # 获取待办事项页面的容器
+        todo_container = self.right_container.widget(2)  # todo页面的索引是2
+        
+        # 根据四象限布局放置按钮
+        for i, todo_item in enumerate(self.todo_list):
+            task = todo_item.get("任务", "")
+            mode_o = todo_item.get("要紧程度", "还好")
+            mode_t = todo_item.get("重要程度", "重要")
+            
+            # 创建待办事项按钮
+            todo_btn = QPushButton(task)
+            todo_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255, 240, 245, 0.8);
+                    color: #c2185b;
+                    border: 2px solid rgba(232, 163, 174, 0.6);
+                    border-radius: 8px;
+                    padding: 5px 10px;
+                    font-weight: bold;
+                    font-size: 12px;
+                }
+                QPushButton:hover {
+                    background: rgba(255, 228, 235, 0.95);
+                    border: 2px solid rgba(255, 105, 180, 0.8);
+                }
+            """)
+            todo_btn.setFixedHeight(40)
+            
+            # 根据重要程度和紧急程度确定位置
+            container_width = todo_container.width()
+            container_height = todo_container.height()
+            
+            # 计算四象限位置
+            if mode_o == "紧急" and mode_t == "很重要":
+                # 第一象限 (右上)
+                x = container_width * 3 // 4 - 100
+                y = container_height // 4 - 20
+            elif mode_o == "紧急" and mode_t in ["重要", "次要", "无聊"]:
+                # 第二象限 (左上)
+                x = container_width // 4 - 100
+                y = container_height // 4 - 20
+            elif mode_o in ["还好", "宽松", "不紧急"] and mode_t == "很重要":
+                # 第四象限 (右下)
+                x = container_width * 3 // 4 - 100
+                y = container_height * 3 // 4 - 20
+            else:
+                # 第三象限 (左下)
+                x = container_width // 4 - 100
+                y = container_height * 3 // 4 - 20
+            
+            # 设置按钮位置
+            todo_btn.setParent(todo_container)
+            todo_btn.move(x, y + i * 50)  # 垂直排列，每个按钮间隔50像素
+            todo_btn.show()
+            
+            # 保存按钮引用
+            self.todo_list_button.append(todo_btn)
+            
 
     def create_memo_page(self):
         """创建备忘录页面"""
