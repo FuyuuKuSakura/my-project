@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas as pd
+import random
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                                QHBoxLayout, QPushButton, QFileDialog, QTableWidget, 
                                QTableWidgetItem, QLabel, QSplitter, QFrame, QMessageBox, QGridLayout, QLineEdit, QStackedWidget, QDialog, QComboBox)
@@ -176,24 +177,24 @@ class MikiLabel(QLabel):
         self.setFixedWidth(self.fixed_width)
         self.adjustHeight()
 
-class todo_button(QPushButton):
-    def __init__(self, text = '', color_code = 0 , parent = None):
-        super().__init__(text, color_code, parent)
-        self.setFixedStyle()
+class TodoButton(QPushButton):
+    def __init__(self, text='', color_code=0, parent=None):
+        super().__init__(text, parent)  # 修正：移除color_code参数
+        self.setFixedStyle(color_code)  # 修正：传递color_code参数
+        self.setFixedSize(135, 65)
     
     def setFixedStyle(self, color_code):
-        colorlist = [ "yellow", "green", "blue", "white"]
+        colorlist = ["yellow", "green", "blue", "white"]
         color = colorlist[color_code % 4]
-        self.setStyleSheet("""
-            todo_button {
-                background-color: rgba(255, 240, 245, 0.9);
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {color};
                 color: black;
-                border: 4px solid rgba(244, 229, 134, 1);
                 border-radius: 20px;
                 padding: 10px;
                 font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
                 font-size: 13px;
-            }
+            }}
         """)
 
 class MainWindow(QMainWindow):
@@ -564,6 +565,7 @@ class MainWindow(QMainWindow):
         todo_container.resizeEvent = resize_event
         
         return todo_container
+    
     def open_dialog_todo(self):
         """打开添加待办事项对话框"""
         todo_dialog = QDialog(self)
@@ -664,83 +666,69 @@ class MainWindow(QMainWindow):
         todo_dialog_layout.addSpacing(20)
         todo_dialog.exec()
     
-    def written_todo(self) :
-        misson = self.todo_content_input.text().strip()
-        deadline = self.todo_date_input.text().strip()
-        mode_o = self.todo_mode_o.currentText().strip()
-        mode_t = self.todo_mode_t.currentText().strip()
-        todo_item ={
-            "任务" : misson ,
-            "截止日期" : deadline , 
-            "要紧程度" : mode_o ,
-            "重要程度" : mode_t
-        }
-        self.todo_list.append(todo_item)
-        self.create_todo_symbol()
-
     def create_todo_symbol(self):
-        # 清除之前的待办按钮
-        for button in self.todo_list_button:
-            button.deleteLater()
-        self.todo_list_button.clear()
+        # 不再清除之前的待办按钮，只添加新的按钮
         
         # 获取待办事项页面的容器
         todo_container = self.right_container.widget(2)  # todo页面的索引是2
         
-        # 根据四象限布局放置按钮
-        for i, todo_item in enumerate(self.todo_list):
+        # 只处理最后一个添加的待办事项（新添加的）
+        if self.todo_list:
+            todo_item = self.todo_list[-1]  # 只获取最新添加的待办事项
             task = todo_item.get("任务", "")
             mode_o = todo_item.get("要紧程度", "还好")
             mode_t = todo_item.get("重要程度", "重要")
             
             # 创建待办事项按钮
-            todo_btn = QPushButton(task)
-            todo_btn.setStyleSheet("""
-                QPushButton {
-                    background: rgba(255, 240, 245, 0.8);
-                    color: #c2185b;
-                    border: 2px solid rgba(232, 163, 174, 0.6);
-                    border-radius: 8px;
-                    padding: 5px 10px;
-                    font-weight: bold;
-                    font-size: 12px;
-                }
-                QPushButton:hover {
-                    background: rgba(255, 228, 235, 0.95);
-                    border: 2px solid rgba(255, 105, 180, 0.8);
-                }
-            """)
-            todo_btn.setFixedHeight(40)
-            
+            todo_btn = TodoButton(task, len(self.todo_list_button))  # 使用当前按钮数量作为color_code
+            todo_btn.setFixedStyle(len(self.todo_list_button))
+
             # 根据重要程度和紧急程度确定位置
             container_width = todo_container.width()
             container_height = todo_container.height()
             
-            # 计算四象限位置
-            if mode_o == "紧急" and mode_t == "很重要":
-                # 第一象限 (右上)
-                x = container_width * 3 // 4 - 100
-                y = container_height // 4 - 20
-            elif mode_o == "紧急" and mode_t in ["重要", "次要", "无聊"]:
-                # 第二象限 (左上)
-                x = container_width // 4 - 100
-                y = container_height // 4 - 20
-            elif mode_o in ["还好", "宽松", "不紧急"] and mode_t == "很重要":
-                # 第四象限 (右下)
-                x = container_width * 3 // 4 - 100
-                y = container_height * 3 // 4 - 20
-            else:
-                # 第三象限 (左下)
-                x = container_width // 4 - 100
-                y = container_height * 3 // 4 - 20
+            # 计算位置
+            if mode_o == '紧急':
+                x = random.randint(container_width * 3 // 4, container_width - 135)  # 减去按钮宽度
+            elif mode_o == '还好':
+                x = random.randint(container_width // 2, container_width * 3 // 4 - 135)
+            elif mode_o == '宽松':
+                x = random.randint(container_width // 4, container_width // 2 - 135)
+            else:  # 不紧急
+                x = random.randint(0, container_width // 4 - 135)
+
+            if mode_t == '很重要':
+                y = random.randint(container_height * 3 // 4, container_height - 65)  # 减去按钮高度
+            elif mode_t == '重要':
+                y = random.randint(container_height // 2, container_height * 3 // 4 - 65)
+            elif mode_t == '次要':
+                y = random.randint(container_height // 4, container_height // 2 - 65)
+            else:  # 无聊
+                y = random.randint(0, container_height // 4 - 65)
             
             # 设置按钮位置
             todo_btn.setParent(todo_container)
-            todo_btn.move(x, y + i * 50)  # 垂直排列，每个按钮间隔50像素
+            todo_btn.move(x, y)
             todo_btn.show()
             
             # 保存按钮引用
             self.todo_list_button.append(todo_btn)
+
+    def written_todo(self):
+        misson = self.todo_content_input.text().strip()
+        deadline = self.todo_date_input.text().strip()
+        mode_o = self.todo_mode_o.currentText().strip()
+        mode_t = self.todo_mode_t.currentText().strip()
+        todo_item = {
+            "任务": misson,
+            "截止日期": deadline, 
+            "要紧程度": mode_o,
+            "重要程度": mode_t
+        }
+        self.todo_list.append(todo_item)
+        self.create_todo_symbol()
+        # 关闭对话框
+        self.sender().parent().accept()  # 获取按钮的父窗口（对话框）并关闭
             
 
     def create_memo_page(self):
